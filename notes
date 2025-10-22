@@ -1,0 +1,12 @@
+**topic
+hecks if user is registered
+
+Verifies the channel exists
+
+Checks if user is in the channel
+
+Then either:
+
+Shows current topic if no new topic provided
+
+Sets new topic if user has permission
