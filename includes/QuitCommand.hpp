@@ -6,8 +6,9 @@
 class QuitCommand : public BaseCommand {
 public:
     QuitCommand(Server* server);
-    virtual ~QuitCommand();
-    virtual void execute(Client* client, const std::vector<std::string>& args);
+    ~QuitCommand();
+
+    void execute(Client* client, const std::vector<std::string>& args);
 };
 
 #endif

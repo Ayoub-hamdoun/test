@@ -77,23 +77,27 @@ void Client::clearBuffer() {
 }
 
 bool Client::hasCompleteCommand() const {
-    return _buffer.find("\r\n") != std::string::npos;
+    return _buffer.find("\n") != std::string::npos;
 }
 
 std::string Client::extractCommand() {
-    size_t pos = _buffer.find("\r\n");
+    size_t pos = _buffer.find("\n");
     if (pos == std::string::npos) {
         return "";
     }
     
     std::string command = _buffer.substr(0, pos);
-    _buffer.erase(0, pos + 2);
+    // Remove \r if present
+    if (!command.empty() && command[command.length()-1] == '\r') {
+        command = command.substr(0, command.length()-1);
+    }
+    _buffer.erase(0, pos + 1);
     
     return command;
 }
 
 std::string Client::getPrefix() const {
-    if (_nickname.empty() && _username.empty()) {
+    if (_nickname.empty()) {
         return "";
     }
     
@@ -106,4 +110,8 @@ std::string Client::getPrefix() const {
     }
     
     return prefix;
+}
+
+std::string Client::getUserMask() const {
+    return _nickname + "!" + _username + "@" + _hostname;
 }

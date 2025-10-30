@@ -9,12 +9,12 @@ PartCommand::~PartCommand() {}
 
 void PartCommand::execute(Client* client, const std::vector<std::string>& args) {
     if (!client->isRegistered()) {
-        sendError(client, 5, ":You have not registered");
+        sendError(client, "451", ":You have not registered");
         return;
     }
     
     if (args.empty()) {
-        sendError(client, 461, "PART :Not enough parameters");
+        sendError(client, "461", "PART :Not enough parameters");
         return;
     }
     
@@ -23,20 +23,18 @@ void PartCommand::execute(Client* client, const std::vector<std::string>& args) 
     
     Channel* channel = _server->getChannel(channelName);
     if (!channel) {
-        sendError(client, 403, channelName + " :No such channel");
+        sendError(client, "403", channelName + " :No such channel");
         return;
     }
     
     if (!channel->hasClient(client)) {
-        sendError(client, 442, channelName + " :You're not on that channel");
+        sendError(client, "442", channelName + " :You're not on that channel");
         return;
     }
     
-    // Broadcast part message
-    std::string partMsg = ":" + client->getPrefix() + " PART " + channelName + " :" + reason + "\r\n";
+    std::string partMsg = ":" + client->getUserMask() + " PART " + channelName + " :" + reason + "\r\n";
     channel->broadcast(partMsg);
     
-    // Remove client from channel
     channel->removeClient(client);
     
     std::cout << "Client " << client->getNickname() << " left channel " << channelName << std::endl;

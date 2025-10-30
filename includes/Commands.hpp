@@ -10,7 +10,7 @@ class Client;
 class Commands {
 private:
     Server* _server;
-    
+
 public:
     Commands(Server* server);
     ~Commands();

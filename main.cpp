@@ -44,7 +44,8 @@ int main(int argc, char** argv) {
         g_server = &server;
         
         server.run();
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
          return 1;
     }

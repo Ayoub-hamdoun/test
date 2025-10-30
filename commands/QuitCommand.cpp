@@ -10,8 +10,7 @@ QuitCommand::~QuitCommand() {}
 void QuitCommand::execute(Client* client, const std::vector<std::string>& args) {
     std::string reason = args.empty() ? "Client quit" : args[0];
     
-    // Broadcast quit message to all channels the client is in
-    std::string quitMsg = ":" + client->getPrefix() + " QUIT :Quit: " + reason + "\r\n";
+    std::string quitMsg = ":" + client->getUserMask() + " QUIT :Quit: " + reason + "\r\n";
     
     std::vector<Channel*> channels = _server->getClientChannels(client);
     for (size_t i = 0; i < channels.size(); ++i) {
@@ -19,7 +18,6 @@ void QuitCommand::execute(Client* client, const std::vector<std::string>& args) 
         channels[i]->removeClient(client);
     }
     
-    // Mark client for removal
     client->setRegistered(false);
     
     std::cout << "Client " << client->getNickname() << " quit: " << reason << std::endl;

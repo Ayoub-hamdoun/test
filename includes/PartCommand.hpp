@@ -6,8 +6,9 @@
 class PartCommand : public BaseCommand {
 public:
     PartCommand(Server* server);
-    virtual ~PartCommand();
-    virtual void execute(Client* client, const std::vector<std::string> &args);
+    ~PartCommand();
+
+    void execute(Client* client, const std::vector<std::string>& args);
 };
 
 #endif

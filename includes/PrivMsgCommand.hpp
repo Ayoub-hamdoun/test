@@ -6,8 +6,9 @@
 class PrivMsgCommand : public BaseCommand {
 public:
     PrivMsgCommand(Server* server);
-    virtual ~PrivMsgCommand();
-    virtual void execute(Client* client, const std::vector<std::string>& args);
+    ~PrivMsgCommand();
+
+    void execute(Client* client, const std::vector<std::string>& args);
 };
 
 #endif

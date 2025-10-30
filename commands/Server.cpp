@@ -11,11 +11,10 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <algorithm>
-
-
+#include <sstream>
 
 Server::Server(int port, const std::string& password) 
-    : _port(port), _password(password), _serverSocket(-1), _serverName("irc.server") {
+    : _port(port), _password(password), _serverSocket(-1), _serverName("irc.local") {
     setupServer();
 }
 
@@ -30,8 +29,7 @@ Server::~Server() {
     }
     _clients.clear();
     
-    for (std::map<std::
-        string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+    for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
         delete it->second;
     }
     _channels.clear();
@@ -47,9 +45,15 @@ Server::~Server() {
         close(_serverSocket);
         _serverSocket = -1;
     }
+    
     std::cout << "Cleanup completed." << std::endl;
 }
 
+std::string Server::toString(int value) {
+    std::stringstream ss;
+    ss << value;
+    return ss.str();
+}
 
 void Server::setupServer() {
     _serverSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -59,11 +63,13 @@ void Server::setupServer() {
     
     int opt = 1;
     if (setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-        close(_serverSocket);
-        throw std::runtime_error("Failed to set socket options");
+        std::cerr << "Warning: Failed to set SO_REUSEADDR, continuing anyway..." << std::endl;
     }
     
-    fcntl(_serverSocket, F_SETFL, O_NONBLOCK);
+    if (fcntl(_serverSocket, F_SETFL, O_NONBLOCK) < 0) {
+        close(_serverSocket);
+        throw std::runtime_error("Failed to set non-blocking mode");
+    }
     
     struct sockaddr_in serverAddr;
     std::memset(&serverAddr, 0, sizeof(serverAddr));
@@ -73,10 +79,10 @@ void Server::setupServer() {
     
     if (bind(_serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
         close(_serverSocket);
-        throw std::runtime_error("Failed to bind socket");
+        throw std::runtime_error("Failed to bind socket to port " + toString(_port));
     }
     
-    if (listen(_serverSocket, SOMAXCONN) < 0) {
+    if (listen(_serverSocket, 10) < 0) {
         close(_serverSocket);
         throw std::runtime_error("Failed to listen on socket");
     }
@@ -87,7 +93,7 @@ void Server::setupServer() {
     serverPollFd.revents = 0;
     _pollFds.push_back(serverPollFd);
     
-    std::cout << "Server listening on port " << _port << std::endl;
+    std::cout << "Server successfully listening on port " << _port << std::endl;
 }
 
 void Server::run() {
@@ -161,8 +167,10 @@ void Server::handleClientData(int clientFd) {
     
     while (client->hasCompleteCommand()) {
         std::string command = client->extractCommand();
-        std::cout << "Received from " << client->getNickname() << " (FD: " << clientFd << "): " << command << std::endl;
-        processCommand(client, command);
+        if (!command.empty()) {
+            std::cout << "Received from " << client->getNickname() << " (FD: " << clientFd << "): " << command << std::endl;
+            processCommand(client, command);
+        }
     }
 }
 
@@ -215,13 +223,11 @@ Channel* Server::createChannel(const std::string& name, Client* creator) {
     Channel* channel = new Channel(name);
     _channels[name] = channel;
     
-    // Use the creator parameter to set them as the first operator
     if (creator) {
         channel->addClient(creator);
         channel->setOperator(creator, true);
         std::cout << "Channel " << name << " created by " << creator->getNickname() << std::endl;
     }
-    
     return channel;
 }
 
@@ -242,7 +248,9 @@ bool Server::validatePassword(const std::string& password) const {
 }
 
 void Server::sendToClient(int fd, const std::string& message) {
-    send(fd, message.c_str(), message.length(), 0);
+    if (send(fd, message.c_str(), message.length(), 0) < 0) {
+        std::cerr << "Error sending to client FD: " << fd << std::endl;
+    }
 }
 
 std::vector<Channel*> Server::getClientChannels(Client* client) {
@@ -253,4 +261,23 @@ std::vector<Channel*> Server::getClientChannels(Client* client) {
         }
     }
     return channels;
+}
+
+void Server::sendWelcome(Client* client) {
+    if (!client || client->getNickname().empty()) return;
+    
+    std::string nick = client->getNickname();
+    std::string user = client->getUsername();
+    std::string host = client->getHostname();
+    
+    sendToClient(client->getFd(), ":" + _serverName + " 001 " + nick + " :Welcome to the Internet Relay Network " + nick + "!" + user + "@" + host + "\r\n");
+    sendToClient(client->getFd(), ":" + _serverName + " 002 " + nick + " :Your host is " + _serverName + ", running version 1.0\r\n");
+    sendToClient(client->getFd(), ":" + _serverName + " 003 " + nick + " :This server was created today\r\n");
+    sendToClient(client->getFd(), ":" + _serverName + " 004 " + nick + " " + _serverName + " 1.0 o o\r\n");
+    
+    sendToClient(client->getFd(), ":" + _serverName + " 375 " + nick + " :- " + _serverName + " Message of the Day -\r\n");
+    sendToClient(client->getFd(), ":" + _serverName + " 372 " + nick + " :- Welcome to ft_irc server\r\n");
+    sendToClient(client->getFd(), ":" + _serverName + " 376 " + nick + " :End of /MOTD command\r\n");
+    
+    std::cout << "Client " << nick << " successfully registered and welcomed" << std::endl;
 }

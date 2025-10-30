@@ -6,8 +6,9 @@
 class TopicCommand : public BaseCommand {
 public:
     TopicCommand(Server* server);
-    virtual ~TopicCommand();
-    virtual void execute(Client* client, const std::vector<std::string>& args);
+    ~TopicCommand();
+
+    void execute(Client* client, const std::vector<std::string>& args);
 };
 
 #endif

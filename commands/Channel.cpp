@@ -3,8 +3,8 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-#include <sys/socket.h> // Add this for send() function
-#include <unistd.h>     // Add this for close() function
+#include <sys/socket.h>
+#include <unistd.h>
 
 Channel::Channel(const std::string& name) 
     : _name(name), _topic(""), _key(""), _inviteOnly(false), 
@@ -119,9 +119,9 @@ void Channel::broadcast(const std::string& message, Client* exclude) {
     }
 }
 
-void Channel::sendNamesList(Client* client) {
+void Channel::sendNamesList(Client* client, const std::string& serverName) {
     std::stringstream names;
-    names << ":irc.server 353 " << client->getNickname() << " = " << _name << " :";
+    names << ":" << serverName << " 353 " << client->getNickname() << " = " << _name << " :";
     
     bool first = true;
     for (std::map<Client*, bool>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
@@ -134,19 +134,41 @@ void Channel::sendNamesList(Client* client) {
     
     ::send(client->getFd(), names.str().c_str(), names.str().length(), 0);
     
-    // FIXED: Use string concatenation with + instead of <<
-    std::string endNames = ":irc.server 366 " + client->getNickname() + " " + _name + " :End of /NAMES list\r\n";
+    std::string endNames = ":" + serverName + " 366 " + client->getNickname() + " " + _name + " :End of /NAMES list\r\n";
     ::send(client->getFd(), endNames.c_str(), endNames.length(), 0);
 }
 
-void Channel::sendTopic(Client* client) {
+void Channel::sendTopic(Client* client, const std::string& serverName) {
     if (_topic.empty()) {
-        // FIXED: Use string concatenation with + instead of <<
-        std::string response = ":irc.server 331 " + client->getNickname() + " " + _name + " :No topic is set\r\n";
+        std::string response = ":" + serverName + " 331 " + client->getNickname() + " " + _name + " :No topic is set\r\n";
         ::send(client->getFd(), response.c_str(), response.length(), 0);
     } else {
-        // FIXED: Use string concatenation with + instead of <<
-        std::string response = ":irc.server 332 " + client->getNickname() + " " + _name + " :" + _topic + "\r\n";
+        std::string response = ":" + serverName + " 332 " + client->getNickname() + " " + _name + " :" + _topic + "\r\n";
         ::send(client->getFd(), response.c_str(), response.length(), 0);
     }
+}
+
+void Channel::sendChannelMode(Client* client, const std::string& serverName) {
+    std::string modes = "+";
+    std::string modeParams = "";
+    
+    if (_inviteOnly) modes += "i";
+    if (_topicRestricted) modes += "t";
+    if (!_key.empty()) {
+        modes += "k";
+        modeParams += " " + _key;
+    }
+    if (_userLimit > 0) {
+        modes += "l";
+        modeParams += " " + toString(_userLimit);
+    }
+    
+    std::string modeReply = ":" + serverName + " 324 " + client->getNickname() + " " + _name + " " + modes + modeParams + "\r\n";
+    ::send(client->getFd(), modeReply.c_str(), modeReply.length(), 0);
+}
+
+std::string Channel::toString(int value) {
+    std::stringstream ss;
+    ss << value;
+    return ss.str();
 }

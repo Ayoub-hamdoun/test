@@ -2,10 +2,9 @@
 #define SERVER_HPP
 
 #include <string>
-#include <vector>
 #include <map>
+#include <vector>
 #include <poll.h>
-#include <stdexcept>
 
 class Client;
 class Channel;
@@ -15,31 +14,35 @@ private:
     int _port;
     std::string _password;
     int _serverSocket;
-    std::vector<struct pollfd> _pollFds;
+    std::string _serverName;
     std::map<int, Client*> _clients;
     std::map<std::string, Channel*> _channels;
-    std::string _serverName;
-    
+    std::vector<struct pollfd> _pollFds;
+
     void setupServer();
     void handleNewConnection();
     void handleClientData(int clientFd);
     void processCommand(Client* client, const std::string& command);
-    void removeClient(int clientFd);
+    std::string toString(int value); // ADD THIS LINE
 
 public:
     Server(int port, const std::string& password);
     ~Server();
-    
+
     void run();
-   // void cleanup();
-    bool validatePassword(const std::string& password) const;
+    void removeClient(int clientFd);
+    
     Client* getClient(const std::string& nickname);
     Channel* getChannel(const std::string& name);
-    Channel* createChannel(const std::string& name, Client* creator);
+    Channel* createChannel(const std::string& name, Client* creator = NULL);
     void removeChannel(const std::string& name);
+    
     const std::string& getServerName() const;
+    bool validatePassword(const std::string& password) const;
+    
     void sendToClient(int fd, const std::string& message);
     std::vector<Channel*> getClientChannels(Client* client);
+    void sendWelcome(Client* client);
 };
 
 #endif

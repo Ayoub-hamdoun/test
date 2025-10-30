@@ -10,12 +10,12 @@ ModeCommand::~ModeCommand() {}
 
 void ModeCommand::execute(Client* client, const std::vector<std::string>& args) {
     if (!client->isRegistered()) {
-        sendError(client, 4, ":You have not registered");
+        sendError(client, "451", ":You have not registered");
         return;
     }
     
     if (args.empty()) {
-        sendError(client, 461, "MODE :Not enough parameters");
+        sendError(client, "461", "MODE :Not enough parameters");
         return;
     }
     
@@ -24,8 +24,7 @@ void ModeCommand::execute(Client* client, const std::vector<std::string>& args) 
     if (target[0] == '#' || target[0] == '&') {
         handleChannelMode(client, args);
     } else {
-        // User modes (not required by subject)
-        sendError(client, 502, ":Cannot change mode for other users");
+        sendError(client, "502", ":Cannot change mode for other users");
     }
 }
 
@@ -34,29 +33,22 @@ void ModeCommand::handleChannelMode(Client* client, const std::vector<std::strin
     Channel* channel = _server->getChannel(channelName);
     
     if (!channel) {
-        sendError(client, 403, channelName + " :No such channel");
+        sendError(client, "403", channelName + " :No such channel");
         return;
     }
     
     if (!channel->hasClient(client)) {
-        sendError(client, 442, channelName + " :You're not on that channel");
+        sendError(client, "442", channelName + " :You're not on that channel");
         return;
     }
     
     if (args.size() == 1) {
-        // Query current modes
-        std::string modes = "+";
-        if (channel->isInviteOnly()) modes += "i";
-        if (channel->isTopicRestricted()) modes += "t";
-        if (!channel->getKey().empty()) modes += "k";
-        if (channel->getUserLimit() > 0) modes += "l";
-        
-        sendReply(client, "324 " + client->getNickname() + " " + channelName + " " + modes);
+        channel->sendChannelMode(client, _server->getServerName());
         return;
     }
     
     if (!channel->isOperator(client)) {
-        sendError(client, 482, channelName + " :You're not channel operator");
+        sendError(client, "482", channelName + " :You're not channel operator");
         return;
     }
     
@@ -75,68 +67,66 @@ void ModeCommand::handleChannelMode(Client* client, const std::vector<std::strin
             continue;
         }
         
-        std::string modeChange;
+        std::string broadcastMsg;
         
         switch (mode) {
-            case 'i': // Invite-only
+            case 'i':
                 channel->setInviteOnly(adding);
-                modeChange = (adding ? "+i" : "-i");
+                broadcastMsg = ":" + client->getUserMask() + " MODE " + channelName + " " + (adding ? "+i" : "-i") + "\r\n";
                 break;
                 
-            case 't': // Topic restriction
+            case 't':
                 channel->setTopicRestricted(adding);
-                modeChange = (adding ? "+t" : "-t");
+                broadcastMsg = ":" + client->getUserMask() + " MODE " + channelName + " " + (adding ? "+t" : "-t") + "\r\n";
                 break;
                 
-            case 'k': // Channel key
+            case 'k':
                 if (adding) {
                     if (argIndex < args.size()) {
                         channel->setKey(args[argIndex]);
-                        modeChange = "+k " + args[argIndex];
+                        broadcastMsg = ":" + client->getUserMask() + " MODE " + channelName + " +k " + args[argIndex] + "\r\n";
                         argIndex++;
                     }
                 } else {
                     channel->setKey("");
-                    modeChange = "-k";
+                    broadcastMsg = ":" + client->getUserMask() + " MODE " + channelName + " -k\r\n";
                 }
                 break;
                 
-            case 'o': // Operator privilege
+            case 'o':
                 if (argIndex < args.size()) {
                     Client* targetClient = _server->getClient(args[argIndex]);
                     if (targetClient && channel->hasClient(targetClient)) {
                         channel->setOperator(targetClient, adding);
-                        modeChange = (adding ? "+o " : "-o ") + args[argIndex];
+                        broadcastMsg = ":" + client->getUserMask() + " MODE " + channelName + " " + (adding ? "+o " : "-o ") + args[argIndex] + "\r\n";
                     }
                     argIndex++;
                 }
                 break;
                 
-            case 'l': // User limit
+            case 'l':
                 if (adding) {
                     if (argIndex < args.size()) {
                         int limit = atoi(args[argIndex].c_str());
                         if (limit > 0) {
                             channel->setUserLimit(limit);
-                            modeChange = "+l " + args[argIndex];
+                            broadcastMsg = ":" + client->getUserMask() + " MODE " + channelName + " +l " + args[argIndex] + "\r\n";
                         }
                         argIndex++;
                     }
                 } else {
                     channel->setUserLimit(0);
-                    modeChange = "-l";
+                    broadcastMsg = ":" + client->getUserMask() + " MODE " + channelName + " -l\r\n";
                 }
                 break;
                 
             default:
-                // Unknown mode
+                sendError(client, "472", std::string(1, mode) + " :is unknown mode char to me");
                 continue;
         }
         
-        // Broadcast mode change
-        if (!modeChange.empty()) {
-            std::string modeMsg = ":" + client->getPrefix() + " MODE " + channelName + " " + modeChange + "\r\n";
-            channel->broadcast(modeMsg);
+        if (!broadcastMsg.empty()) {
+            channel->broadcast(broadcastMsg);
         }
     }
 }

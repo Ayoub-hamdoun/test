@@ -6,8 +6,9 @@
 class InviteCommand : public BaseCommand {
 public:
     InviteCommand(Server* server);
-    virtual ~InviteCommand();
-    virtual void execute(Client* client, const std::vector<std::string>& args);
+    ~InviteCommand();
+
+    void execute(Client* client, const std::vector<std::string>& args);
 };
 
 #endif

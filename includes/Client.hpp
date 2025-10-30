@@ -13,27 +13,27 @@ private:
     std::string _buffer;
     bool _authenticated;
     bool _registered;
-    
+
 public:
     Client(int fd);
     ~Client();
-    
+
     int getFd() const;
     const std::string& getNickname() const;
     const std::string& getUsername() const;
     const std::string& getRealname() const;
     const std::string& getHostname() const;
-    
+
     void setNickname(const std::string& nickname);
     void setUsername(const std::string& username);
     void setRealname(const std::string& realname);
     void setHostname(const std::string& hostname);
-    
     void setAuthenticated(bool auth);
     void setRegistered(bool reg);
+
     bool isAuthenticated() const;
     bool isRegistered() const;
-    
+
     void appendToBuffer(const std::string& data);
     std::string getBuffer() const;
     void clearBuffer();
@@ -41,6 +41,7 @@ public:
     std::string extractCommand();
     
     std::string getPrefix() const;
+    std::string getUserMask() const;
 };
 
 #endif

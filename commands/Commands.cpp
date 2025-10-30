@@ -12,7 +12,6 @@
 #include "../includes/ModeCommand.hpp"
 #include "../includes/QuitCommand.hpp"
 #include "../includes/PartCommand.hpp"
-// ... rest of the code
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -23,44 +22,37 @@ Commands::Commands(Server* server) : _server(server) {}
 Commands::~Commands() {}
 
 void Commands::execute(Client* client, const std::string& commandLine) {
-    // DEBUG: Show what we're receiving
-    std::cout << "DEBUG RAW: '" << commandLine << "'" << std::endl;
+    std::string cleanLine = commandLine;
+    if (!cleanLine.empty() && cleanLine[cleanLine.length()-1] == '\r') {
+        cleanLine = cleanLine.substr(0, cleanLine.length()-1);
+    }
     
-    std::stringstream ss(commandLine);
+    std::cout << "DEBUG RAW: '" << cleanLine << "'" << std::endl;
+    
+    std::stringstream ss(cleanLine);
     std::string command;
     std::vector<std::string> args;
     std::string token;
     
     ss >> command;
     
-    // Parse arguments with proper trailing parameter handling
     while (ss >> token) {
         if (token[0] == ':') {
-            // Found the trailing parameter - get everything after colon as one string
-            std::string trailing = token.substr(1);  // Remove the colon
-            
-            // Get the rest of the line
+            std::string trailing = token.substr(1);
             std::string rest;
             std::getline(ss, rest);
             
-            // Combine and trim leading space if present
             if (!rest.empty() && rest[0] == ' ') {
-                trailing += rest;
+                trailing += rest.substr(1);
             } else if (!rest.empty()) {
-                trailing += " " + rest;
+                trailing += rest;
             }
             
             args.push_back(trailing);
-            break;  // Stop parsing after trailing parameter
+            break;
         } else {
             args.push_back(token);
         }
-    }
-    
-    // DEBUG: Show parsed result
-    std::cout << "DEBUG PARSED - Command: '" << command << "' Args: " << args.size() << std::endl;
-    for (size_t i = 0; i < args.size(); ++i) {
-        std::cout << "  [" << i << "] = '" << args[i] << "'" << std::endl;
     }
     
     std::transform(command.begin(), command.end(), command.begin(), ::toupper);
@@ -108,6 +100,23 @@ void Commands::execute(Client* client, const std::string& commandLine) {
     else if (command == "PART") {
         PartCommand cmd(_server);
         cmd.execute(client, args);
+    }
+    else if (command == "PING") {
+        std::string pongMsg = ":" + _server->getServerName() + " PONG " + _server->getServerName();
+        if (!args.empty()) {
+            pongMsg += " :" + args[0];
+        }
+        pongMsg += "\r\n";
+        _server->sendToClient(client->getFd(), pongMsg);
+    }
+    else if (command == "PONG") {
+    }
+    else if (command == "CAP") {
+        if (!args.empty() && args[0] == "LS") {
+            _server->sendToClient(client->getFd(), "CAP * LS :\r\n");
+        }
+        else if (!args.empty() && args[0] == "END") {
+        }
     }
     else {
         std::string response = ":" + _server->getServerName() + " 421 " + client->getNickname() + " " + command + " :Unknown command\r\n";

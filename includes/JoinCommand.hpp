@@ -6,8 +6,9 @@
 class JoinCommand : public BaseCommand {
 public:
     JoinCommand(Server* server);
-    virtual ~JoinCommand();
-    virtual void execute(Client* client, const std::vector<std::string>& args);
+    ~JoinCommand();
+
+    void execute(Client* client, const std::vector<std::string>& args);
 };
 
 #endif

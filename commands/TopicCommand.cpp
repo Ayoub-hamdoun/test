@@ -9,12 +9,12 @@ TopicCommand::~TopicCommand() {}
 
 void TopicCommand::execute(Client* client, const std::vector<std::string>& args) {
     if (!client->isRegistered()) {
-        sendError(client, 7, ":You have not registered");
+        sendError(client, "451", ":You have not registered");
         return;
     }
     
     if (args.empty()) {
-        sendError(client, 461, "TOPIC :Not enough parameters");
+        sendError(client, "461", "TOPIC :Not enough parameters");
         return;
     }
     
@@ -23,29 +23,26 @@ void TopicCommand::execute(Client* client, const std::vector<std::string>& args)
     
     Channel* channel = _server->getChannel(channelName);
     if (!channel) {
-        sendError(client, 403, channelName + " :No such channel");
+        sendError(client, "403", channelName + " :No such channel");
         return;
     }
     
     if (!channel->hasClient(client)) {
-        sendError(client, 442, channelName + " :You're not on that channel");
+        sendError(client, "442", channelName + " :You're not on that channel");
         return;
     }
     
     if (newTopic.empty()) {
-        // Query current topic
-        channel->sendTopic(client);
+        channel->sendTopic(client, _server->getServerName());
     } else {
-        // Set new topic
         if (channel->isTopicRestricted() && !channel->isOperator(client)) {
-            sendError(client, 482, channelName + " :You're not channel operator");
+            sendError(client, "482", channelName + " :You're not channel operator");
             return;
         }
         
         channel->setTopic(newTopic);
         
-        // Broadcast topic change
-        std::string topicMsg = ":" + client->getPrefix() + " TOPIC " + channelName + " :" + newTopic + "\r\n";
+        std::string topicMsg = ":" + client->getUserMask() + " TOPIC " + channelName + " :" + newTopic + "\r\n";
         channel->broadcast(topicMsg);
         
         std::cout << "Topic for " << channelName << " set to: " << newTopic << " by " << client->getNickname() << std::endl;
