@@ -1,7 +1,7 @@
 
 NAME = ircserv
 CC = c++
-CFLAGS = -Wall -Wextra -Werror -std=c++98
+CFLAGS = -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address
 
 SRCS = main.cpp commands/Server.cpp commands/Client.cpp commands/Channel.cpp commands/Commands.cpp \
       commands/BaseCommand.cpp \

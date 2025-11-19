@@ -25,8 +25,6 @@ void UserCommand::execute(Client* client, const std::vector<std::string>& args) 
     client->setUsername(args[0]);
     client->setRealname(args[3]);
     
-    std::cout << "DEBUG: Client set username to: " << args[0] << " and realname to: " << args[3] << std::endl;
-    
     if (!client->isRegistered() && client->isAuthenticated() && 
         !client->getNickname().empty() && !client->getUsername().empty()) {
         client->setRegistered(true);

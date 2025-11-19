@@ -20,5 +20,5 @@ void QuitCommand::execute(Client* client, const std::vector<std::string>& args) 
     
     client->setRegistered(false);
     
-    std::cout << "Client " << client->getNickname() << " quit: " << reason << std::endl;
+  std::cout << "Client " << client->getNickname() << " quit: " << reason << std::endl;
 }

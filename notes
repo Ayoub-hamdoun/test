@@ -10,3 +10,5 @@ Then either:
 Shows current topic if no new topic provided
 
 Sets new topic if user has permission
+
+What it does: Prevents messaging top-level domains like PRIVMSG #* :message

@@ -37,17 +37,22 @@ void Commands::execute(Client* client, const std::string& commandLine) {
     ss >> command;
     
     while (ss >> token) {
+        std::cout << "--------> " << token << std::endl;
         if (token[0] == ':') {
             std::string trailing = token.substr(1);
             std::string rest;
             std::getline(ss, rest);
+            std::cout << "=======>|" << token << "|--|" << trailing << "|--|" << rest << "|" << std::endl;
             
-            if (!rest.empty() && rest[0] == ' ') {
-                trailing += rest.substr(1);
-            } else if (!rest.empty()) {
-                trailing += rest;
-            }
+            // if (!rest.empty()) {
+            //     std::stringstream restO(rest);
+            //     restO >> rest;
+            //     trailing += rest; // prblm in case :+msg
+            // }
             
+            trailing += rest;
+
+            std::cout << "=======>|" << token << "|--|" << trailing << "|--|" << rest << "|" << std::endl;
             args.push_back(trailing);
             break;
         } else {

@@ -58,7 +58,7 @@ std::string Server::toString(int value) {
 void Server::setupServer() {
     _serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (_serverSocket == -1) {
-        throw std::runtime_error("Failed to create socket");
+        throw std::runtime_error("Failed to create socket"); //check this 
     }
     
     int opt = 1;
@@ -82,7 +82,7 @@ void Server::setupServer() {
         throw std::runtime_error("Failed to bind socket to port " + toString(_port));
     }
     
-    if (listen(_serverSocket, 10) < 0) {
+    if (listen(_serverSocket, SOMAXCONN) < 0) {
         close(_serverSocket);
         throw std::runtime_error("Failed to listen on socket");
     }
@@ -98,7 +98,7 @@ void Server::setupServer() {
 
 void Server::run() {
     while (true) {
-        int pollCount = poll(_pollFds.data(), _pollFds.size(), -1);
+        int pollCount = poll(_pollFds.data(), _pollFds.size(), -1); // check this
         
         if (pollCount < 0) {
             throw std::runtime_error("Poll error");

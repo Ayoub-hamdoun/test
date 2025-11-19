@@ -1,3 +1,8 @@
 dont join the same channel
 send message with more than word
 space before privmsg doesnt appear
+kick operator
+missing spaces in topic after:
+Client test quit: ihave to work //space
+:rio!k@localhost QUIT :Quit: gonefor ever //space
+why!u@localhost PRIVMSG #r :youare fantastic //space

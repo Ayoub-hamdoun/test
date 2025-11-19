@@ -2,6 +2,7 @@
 #define BASECOMMAND_HPP
 
 #include <string>
+#include <vector>
 
 class Server;
 class Client;

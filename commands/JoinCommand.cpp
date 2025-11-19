@@ -21,7 +21,7 @@ void JoinCommand::execute(Client* client, const std::vector<std::string>& args) 
     std::string channelName = args[0];
     std::string channelKey = args.size() > 1 ? args[1] : "";
     
-    if (channelName.empty() || (channelName[0] != '#' && channelName[0] != '&') || channelName.length() > 50) {
+    if (channelName.empty() || channelName[0] != '#'  || channelName.length() > 50) {
         sendError(client, "403", channelName + " :No such channel");
         return;
     }
