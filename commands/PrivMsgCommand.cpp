@@ -106,7 +106,7 @@ bool PrivMsgCommand::sendToChannel(Client* client, const std::string& channelNam
     
     std::string privMsg = ":" + client->getUserMask() + " PRIVMSG " + channelName + " :" + message + "\r\n";
     channel->broadcast(privMsg, client);
-    std::cout << "Message from " << client->getNickname() << " to channel " << channelName << ": " << message << std::endl;
+    std::cout << "Message from " << client->getNickname() << " to channel " << channelName << ":" << message << std::endl;
     return true;
 }
 
@@ -118,6 +118,6 @@ bool PrivMsgCommand::sendToUser(Client* client, const std::string& nickname, con
     
     std::string privMsg = ":" + client->getUserMask() + " PRIVMSG " + nickname + " :" + message + "\r\n";
     _server->sendToClient(targetClient->getFd(), privMsg);
-    std::cout << "Private message from " << client->getNickname() << " to " << nickname << ": " << message << std::endl;
+    std::cout << "Private message from " << client->getNickname() << " to " << nickname << " :" << message << std::endl;
     return true;
 }

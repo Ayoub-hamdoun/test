@@ -10,7 +10,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
-#include <algorithm>
+// #include <algorithm>
 #include <sstream>
 
 Server::Server(int port, const std::string& password) 
@@ -135,6 +135,8 @@ void Server::handleNewConnection() {
     _pollFds.push_back(clientPollFd);
     
     Client* client = new Client(clientFd);
+    std::string clientHost = inet_ntoa(clientAddr.sin_addr); //set hostname
+    client->setHostname(clientHost);
     _clients[clientFd] = client;
     
     std::cout << "New client connected from " << inet_ntoa(clientAddr.sin_addr) 

@@ -8,7 +8,7 @@
 
 Channel::Channel(const std::string& name) 
     : _name(name), _topic(""), _key(""), _inviteOnly(false), 
-      _topicRestricted(false), _userLimit(0) {
+        _topicRestricted(false), _userLimit(0) {
     std::cout << "New channel created: " << name << std::endl;
 }
 

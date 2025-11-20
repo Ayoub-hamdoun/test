@@ -4,7 +4,7 @@
 
 Client::Client(int fd) 
     : _fd(fd), _nickname(""), _username(""), _realname(""), _hostname("localhost"), 
-      _authenticated(false), _registered(false) {
+        _authenticated(false), _registered(false) {
     std::cout << "New client connected with FD: " << fd << std::endl;
 }
 
@@ -87,7 +87,6 @@ std::string Client::extractCommand() {
     }
     
     std::string command = _buffer.substr(0, pos);
-    // Remove \r if present
     if (!command.empty() && command[command.length()-1] == '\r') {
         command = command.substr(0, command.length()-1);
     }
