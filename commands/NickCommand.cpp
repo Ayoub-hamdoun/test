@@ -33,6 +33,12 @@ bool NickCommand::isValidNickname(const std::string& nick) {
 }
 
 void NickCommand::execute(Client* client, const std::vector<std::string>& args) {
+
+    if (!client->isAuthenticated()) {
+        sendError(client, "451", ":You have not registered (use PASS first)");
+        return;
+    }
+
     if (args.empty()) {
         sendError(client, "431", ":No nickname given");
         return;

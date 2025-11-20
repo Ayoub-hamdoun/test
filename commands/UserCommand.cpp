@@ -7,6 +7,12 @@ UserCommand::UserCommand(Server* server) : BaseCommand(server) {}
 UserCommand::~UserCommand() {}
 
 void UserCommand::execute(Client* client, const std::vector<std::string>& args) {
+
+    if (!client->isAuthenticated()) {
+        sendError(client, "451", ":You have not registered (use PASS first)");
+        return;
+    }
+
     if (client->isRegistered()) {
         sendError(client, "462", ":You may not reregister");
         return;

@@ -4,11 +4,15 @@
 #include "BaseCommand.hpp"
 
 class JoinCommand : public BaseCommand {
-public:
-    JoinCommand(Server* server);
-    ~JoinCommand();
+    private:
+        std::vector<std::string> splitByComma(const std::string& str);
+        void joinSingleChannel(Client* client, const std::string& channelName, const std::string& channelKey);
 
-    void execute(Client* client, const std::vector<std::string>& args);
+    public:
+        JoinCommand(Server* server);
+        ~JoinCommand();
+
+        void execute(Client* client, const std::vector<std::string>& args);
 };
 
 #endif
